@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.capgemini.chess.algorithms.data.Coordinate;
 import com.capgemini.chess.algorithms.data.Move;
+import com.capgemini.chess.algorithms.data.MoveValidator;
 import com.capgemini.chess.algorithms.data.enums.BoardState;
 import com.capgemini.chess.algorithms.data.enums.Color;
 import com.capgemini.chess.algorithms.data.enums.MoveType;
@@ -233,8 +234,17 @@ public class BoardManager {
 
 	private Move validateMove(Coordinate from, Coordinate to) throws InvalidMoveException, KingInCheckException {
 
+		Move move = new Move();
+		MoveValidator moveValidator = new MoveValidator();
+		boolean isValid;
+		if (moveValidator.isValid(board, from.getX(), from.getY(), to.getX(), to.getY())) {
+			move.setFrom(from);
+			move.setTo(to);
+		} else {
+			throw new InvalidMoveException();
+		}
 		// TODO please add implementation here
-		return null;
+		return move;
 	}
 
 	private boolean isKingInCheck(Color kingColor) {
