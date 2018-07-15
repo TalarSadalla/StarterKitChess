@@ -233,17 +233,9 @@ public class BoardManager {
 	}
 
 	private Move validateMove(Coordinate from, Coordinate to) throws InvalidMoveException, KingInCheckException {
-
 		Move move = new Move();
 		MoveValidator moveValidator = new MoveValidator();
-		boolean isValid;
-		if (moveValidator.isValid(board, from.getX(), from.getY(), to.getX(), to.getY())) {
-			move.setFrom(from);
-			move.setTo(to);
-		} else {
-			throw new InvalidMoveException();
-		}
-		// TODO please add implementation here
+		move=moveValidator.isValid(board, from.getX(), from.getY(), to.getX(), to.getY()); 		
 		return move;
 	}
 
