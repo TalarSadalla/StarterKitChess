@@ -10,6 +10,7 @@ import com.capgemini.chess.algorithms.data.enums.Piece;
 import com.capgemini.chess.algorithms.data.enums.PieceType;
 import com.capgemini.chess.algorithms.data.generated.Board;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidBishopMoveException;
+import com.capgemini.chess.algorithms.implementation.exceptions.InvalidColorException;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidKingMoveException;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidKnightMoveException;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidMoveException;
@@ -24,6 +25,12 @@ public class MoveValidator {
 
 	public Move validate(Board board, int xFrom, int yFrom, int xTo, int yTo) throws InvalidMoveException {
 		Move move = new Move();
+		Color playerColor;
+		if (board.getMoveHistory().size() % 2 == 0) {
+			playerColor = Color.WHITE;
+		} else {
+			playerColor = Color.BLACK;
+		}
 		if (xTo < 0 || xTo > 7 || xFrom < 0 || xFrom > 7 || yTo < 0 || yTo > 7 || yFrom < 0 || yFrom > 7) {
 			throw new OutOfBoardMoveException();
 		}
@@ -33,29 +40,34 @@ public class MoveValidator {
 		if (xTo == xFrom && yTo == yFrom)
 			throw new InvalidMoveException();
 
-		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KING)) {
-			ArrayList<Coordinate> filteredMoves = possibleKingMoves(board, xFrom, yFrom, xTo, yTo);
-			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-		}
-		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KNIGHT)) {
-			ArrayList<Coordinate> filteredMoves = possibleKnightMoves(board, xFrom, yFrom, xTo, yTo);
-			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-		}
-		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.QUEEN)) {
-			ArrayList<Coordinate> filteredMoves = possibleQueenMoves(board, xFrom, yFrom, xTo, yTo);
-			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-		}
-		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.BISHOP)) {
-			ArrayList<Coordinate> filteredMoves = possibleBishopMoves(board, xFrom, yFrom, xTo, yTo);
-			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-		}
-		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.ROOK)) {
-			ArrayList<Coordinate> filteredMoves = possibleRookMoves(board, xFrom, yFrom, xTo, yTo);
-			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-		}
-		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.PAWN)) {
-			ArrayList<Coordinate> filteredMoves = possiblePawnMoves(board, xFrom, yFrom, xTo, yTo);
-			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+		if (playerColor == board.getPieceAt(new Coordinate(xFrom, yFrom)).getColor()) {
+
+			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KING)) {
+				ArrayList<Coordinate> filteredMoves = possibleKingMoves(board, xFrom, yFrom, xTo, yTo);
+				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			}
+			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KNIGHT)) {
+				ArrayList<Coordinate> filteredMoves = possibleKnightMoves(board, xFrom, yFrom, xTo, yTo);
+				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			}
+			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.QUEEN)) {
+				ArrayList<Coordinate> filteredMoves = possibleQueenMoves(board, xFrom, yFrom, xTo, yTo);
+				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			}
+			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.BISHOP)) {
+				ArrayList<Coordinate> filteredMoves = possibleBishopMoves(board, xFrom, yFrom, xTo, yTo);
+				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			}
+			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.ROOK)) {
+				ArrayList<Coordinate> filteredMoves = possibleRookMoves(board, xFrom, yFrom, xTo, yTo);
+				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			}
+			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.PAWN)) {
+				ArrayList<Coordinate> filteredMoves = possiblePawnMoves(board, xFrom, yFrom, xTo, yTo);
+				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			}
+		} else {
+			throw new InvalidColorException();
 		}
 
 		return move;
@@ -180,18 +192,10 @@ public class MoveValidator {
 	private ArrayList<Coordinate> possibleQueenMoves(Board board, int xFrom, int yFrom, int xTo, int yTo)
 			throws InvalidMoveException {
 		ArrayList<Coordinate> filteredMoves = new ArrayList<Coordinate>();
-		if (yFrom < yTo) {
-			for (int xAxis = xFrom; xAxis <= xTo; xAxis++) {
-				for (int yAxis = yFrom; yAxis <= yTo; yAxis++) {
-					validateQueenMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
-				}
-			}
+		if (xFrom == xTo || yFrom == yTo) {
+			filteredMoves.addAll(possibleRookMoves(board, xFrom, yFrom, xTo, yTo));
 		} else {
-			for (int xAxis = xTo; xAxis >= xFrom; xAxis--) {
-				for (int yAxis = yTo; yAxis >= yFrom; yAxis--) {
-					validateQueenMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
-				}
-			}
+			filteredMoves.addAll(possibleBishopMoves(board, xFrom, yFrom, xTo, yTo));
 		}
 		if (filteredMoves.size() == 0) {
 			throw new InvalidQueenMoveException();
@@ -199,26 +203,32 @@ public class MoveValidator {
 		return filteredMoves;
 	}
 
-	private void validateQueenMoves(int xTo, int yTo, ArrayList<Coordinate> filteredMoves, int xAxis, int yAxis) {
-		if (xAxis == xTo || yAxis == yTo || Math.abs(xAxis - xTo) == Math.abs(yAxis - yTo)) {
-			filteredMoves.add(new Coordinate(xAxis, yAxis));
-		}
-	}
-
 	private ArrayList<Coordinate> possibleRookMoves(Board board, int xFrom, int yFrom, int xTo, int yTo)
 			throws InvalidMoveException {
 		ArrayList<Coordinate> filteredMoves = new ArrayList<Coordinate>();
-		if (yFrom < yTo) {
-			for (int xAxis = xFrom; xAxis <= xTo; xAxis++) {
-				for (int yAxis = yFrom; yAxis <= yTo; yAxis++) {
+		if (yFrom < yTo && xFrom == xTo) {
+			int xAxis = xFrom;
+			for (int yAxis = yFrom; yAxis <= yTo; yAxis++) {
+				if (xAxis == xFrom && yAxis != yFrom)
 					validateRookMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
-				}
 			}
-		} else {
-			for (int xAxis = xTo; xAxis >= xFrom; xAxis--) {
-				for (int yAxis = yTo; yAxis >= yFrom; yAxis--) {
+		} else if (yFrom > yTo && xFrom == xTo) {
+			int xAxis = xFrom;
+			for (int yAxis = yTo; yAxis <= yFrom; yAxis++) {
+				if (xAxis == xFrom && yAxis != yFrom)
 					validateRookMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
-				}
+			}
+		} else if (xFrom < xTo && yFrom == yTo) {
+			int yAxis = yFrom;
+			for (int xAxis = xFrom; xAxis <= xTo; xAxis++) {
+				if (xAxis != xFrom && yAxis == yFrom)
+					validateRookMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
+			}
+		} else if (xFrom > xTo && yFrom == yTo) {
+			int yAxis = yFrom;
+			for (int xAxis = xTo; xAxis <= xFrom; xAxis++) {
+				if (xAxis != xFrom && yAxis == yFrom)
+					validateRookMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
 			}
 		}
 		if (filteredMoves.size() == 0) {
@@ -237,16 +247,30 @@ public class MoveValidator {
 	private ArrayList<Coordinate> possibleBishopMoves(Board board, int xFrom, int yFrom, int xTo, int yTo)
 			throws InvalidMoveException {
 		ArrayList<Coordinate> filteredMoves = new ArrayList<Coordinate>();
-		if (yFrom < yTo) {
+		if (yFrom < yTo && xFrom < xTo) {
 			for (int xAxis = xFrom; xAxis <= xTo; xAxis++) {
 				for (int yAxis = yFrom; yAxis <= yTo; yAxis++) {
 					if (xAxis != xFrom && yAxis != yFrom)
 						validateBishopMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
 				}
 			}
-		} else {
+		} else if (yFrom > yTo && xFrom > xTo) {
+			for (int xAxis = xFrom; xAxis >= xTo; xAxis--) {
+				for (int yAxis = yFrom; yAxis >= yTo; yAxis--) {
+					if (xAxis != xFrom && yAxis != yFrom)
+						validateBishopMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
+				}
+			}
+		} else if (yFrom > yTo && xFrom < xTo) {
 			for (int xAxis = xFrom; xAxis <= xTo; xAxis++) {
 				for (int yAxis = yFrom; yAxis >= yTo; yAxis--) {
+					if (xAxis != xFrom && yAxis != yFrom)
+						validateBishopMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
+				}
+			}
+		} else if (yFrom < yTo && xFrom > xTo) {
+			for (int xAxis = xFrom; xAxis >= xTo; xAxis--) {
+				for (int yAxis = yFrom; yAxis <= yTo; yAxis++) {
 					if (xAxis != xFrom && yAxis != yFrom)
 						validateBishopMoves(xTo, yTo, filteredMoves, xAxis, yAxis);
 				}
@@ -270,10 +294,8 @@ public class MoveValidator {
 		ArrayList<Coordinate> filteredMoves = new ArrayList<Coordinate>();
 		if (yFrom < yTo) {
 			validatePawnMoves(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-
 		} else {
 			validatePawnMoves(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-
 		}
 		if (filteredMoves.size() == 0) {
 			throw new InvalidPawnMoveException();
@@ -285,7 +307,9 @@ public class MoveValidator {
 			ArrayList<Coordinate> filteredMoves) {
 		for (int x = 0; x < board.SIZE; x++) {
 			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getColor() == Color.WHITE) {
+
 				if (yFrom == 1) {
+
 					if (yTo == (yFrom + 2) && xFrom == x) {
 						filteredMoves.add(new Coordinate(xFrom, yFrom));
 					}
