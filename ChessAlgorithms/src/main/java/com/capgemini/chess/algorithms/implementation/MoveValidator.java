@@ -23,6 +23,46 @@ import com.capgemini.chess.algorithms.implementation.exceptions.OutOfBoardMoveEx
 
 public class MoveValidator {
 
+	public Coordinate findKingInSpecifiedColor(Board board, Color kingColor) {
+		Piece[][] allPieces = new Piece[board.SIZE][board.SIZE];
+		allPieces = board.getPieces();
+		int kingCoordinateX = 0;
+		int kingCoordinateY = 0;
+
+		for (int xAxis = 0; xAxis < board.SIZE; xAxis++) {
+			for (int yAxis = 0; yAxis < board.SIZE; yAxis++) {
+				if (allPieces[xAxis][yAxis] != null) {
+					if (allPieces[xAxis][yAxis].getType() == PieceType.KING
+							&& (allPieces[xAxis][yAxis].getColor() == kingColor)) {
+						kingCoordinateX = xAxis;
+						kingCoordinateY = yAxis;
+						break;
+					}
+				}
+			}
+		}
+		Coordinate kingCoordinates = new Coordinate(kingCoordinateX, kingCoordinateY);
+		return kingCoordinates;
+	}
+
+	public ArrayList<Move> isKingInCheckValidation(Board board, Color kingColor, Coordinate kingCoordinates)
+			throws InvalidMoveException {
+		ArrayList<Move> movesToKing = new ArrayList<Move>();
+		Piece[][] allPieces = new Piece[board.SIZE][board.SIZE];
+		allPieces = board.getPieces();
+		for (int xAxis = 0; xAxis < board.SIZE; xAxis++) {
+			for (int yAxis = 0; yAxis < board.SIZE; yAxis++) {
+				if (allPieces[xAxis][yAxis] != null) {
+					if (allPieces[xAxis][yAxis].getColor() != kingColor) {
+						movesToKing.add(validate(board, xAxis, yAxis, kingCoordinates.getX(), kingCoordinates.getY()));
+					}
+				}
+			}
+		}
+		return movesToKing;
+
+	}
+
 	public Move validate(Board board, int xFrom, int yFrom, int xTo, int yTo) throws InvalidMoveException {
 		Move move = new Move();
 		Color playerColor;
@@ -127,31 +167,59 @@ public class MoveValidator {
 
 		ArrayList<Coordinate> filteredMoves = new ArrayList<Coordinate>();
 		int distance = 0;
-		if (yFrom < yTo) {
+		if (yFrom < yTo && xFrom < xTo) {
 			if (yTo > yFrom + 1 || xTo > xFrom + 1) {
 				throw new InvalidKingMoveException();
 			}
-			for (int xAxis = xFrom - 1; xAxis <= xTo; xAxis++) {
+			for (int xAxis = xFrom; xAxis <= xTo; xAxis++) {
 				for (int yAxis = yFrom; yAxis <= yTo; yAxis++) {
-					if (xAxis != xFrom && yAxis != yFrom) {
+					if (xAxis != xFrom || yAxis != yFrom) {
 						distance = (int) (Math.pow(xTo - xAxis, 2) + Math.pow(yTo - yAxis, 2));
 						validateKingMoves(filteredMoves, distance, xAxis, yAxis);
 					}
 				}
 			}
-		} else {
+		} else if (yFrom > yTo && xFrom > xTo) {
 			if (yTo > yFrom - 1 || xTo > xFrom - 1) {
 				throw new InvalidKingMoveException();
 			}
-			for (int xAxis = xFrom - 1; xAxis >= xTo; xAxis--) {
-				for (int yAxis = yFrom; yAxis <= yFrom; yAxis--) {
-					if (xAxis != xFrom && yAxis != yFrom) {
+			for (int xAxis = xFrom; xAxis >= xTo; xAxis--) {
+				for (int yAxis = yFrom; yAxis >= yTo; yAxis--) {
+					if (xAxis != xFrom || yAxis != yFrom) {
 						distance = (int) (Math.pow(xTo - xAxis, 2) + Math.pow(yTo - yAxis, 2));
 						validateKingMoves(filteredMoves, distance, xAxis, yAxis);
 					}
 				}
 			}
+		} else if (yFrom > yTo && xFrom < xTo) {
+			if (yTo > yFrom + 1 || xTo > xFrom + 1) {
+				throw new InvalidKingMoveException();
+			}
+			for (int xAxis = xFrom; xAxis <= xTo; xAxis++) {
+				for (int yAxis = yFrom; yAxis >= yTo; yAxis--) {
+					if (xAxis != xFrom || yAxis != yFrom) {
+						distance = (int) (Math.pow(xTo - xAxis, 2) + Math.pow(yTo - yAxis, 2));
+						validateKingMoves(filteredMoves, distance, xAxis, yAxis);
+					}
+				}
+			}
+		} else if (yFrom < yTo && xFrom > xTo) {
+			if (yTo > yFrom - 1 || xTo > xFrom - 1) {
+				throw new InvalidKingMoveException();
+			}
+			for (int xAxis = xFrom; xAxis >= xTo; xAxis--) {
+				for (int yAxis = yFrom; yAxis <= yTo; yAxis++) {
+					if (xAxis != xFrom || yAxis != yFrom) {
+						distance = (int) (Math.pow(xTo - xAxis, 2) + Math.pow(yTo - yAxis, 2));
+						validateKingMoves(filteredMoves, distance, xAxis, yAxis);
+					}
+				}
+			}
+		} else if (yFrom == yTo || xFrom == xTo) {
+			distance = (int) (Math.pow(xTo - xFrom, 2) + Math.pow(yTo - yFrom, 2));
+			validateKingMoves(filteredMoves, distance, xFrom, yFrom);
 		}
+
 		if (filteredMoves.size() == 0) {
 			throw new InvalidKingMoveException();
 		}

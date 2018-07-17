@@ -7,8 +7,10 @@ import org.junit.Test;
 
 import com.capgemini.chess.algorithms.data.Coordinate;
 import com.capgemini.chess.algorithms.data.Move;
+import com.capgemini.chess.algorithms.data.enums.Color;
 import com.capgemini.chess.algorithms.data.enums.MoveType;
 import com.capgemini.chess.algorithms.data.enums.Piece;
+import com.capgemini.chess.algorithms.data.enums.PieceType;
 import com.capgemini.chess.algorithms.data.generated.Board;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidMoveException;
 
@@ -156,22 +158,15 @@ public class PieceTest {
 		// given
 		Board board = new Board();
 		board.setPieceAt(Piece.WHITE_KING, new Coordinate(4, 0));
-		board.setPieceAt(Piece.BLACK_KING, new Coordinate(4, 7));
 
 		// when
 		BoardManager boardManager = new BoardManager(board);
 		Move move = boardManager.performMove(new Coordinate(4, 0), new Coordinate(4, 1));
-		boolean exceptionThrown = false;
-		try {
-			boardManager.performMove(new Coordinate(4, 7), new Coordinate(4, 5));
-		} catch (InvalidMoveException e) {
-			exceptionThrown = true;
-		}
+		
 
 		// then
 		assertEquals(MoveType.ATTACK, move.getType());
 		assertEquals(Piece.WHITE_KING, move.getMovedPiece());
-		assertTrue(exceptionThrown);
 	}
 	
 	@Test
@@ -219,6 +214,49 @@ public class PieceTest {
 		// then
 		assertEquals(MoveType.ATTACK, move.getType());
 		assertEquals(Piece.WHITE_QUEEN, move.getMovedPiece());
+	}
+	
+	@Test
+	public void testReturnKingCoordinatest() throws InvalidMoveException {
+		// given
+		Board board = new Board();
+		board.setPieceAt(Piece.BLACK_ROOK, new Coordinate(0, 7));
+		board.setPieceAt(Piece.BLACK_KNIGHT, new Coordinate(1, 7));
+		board.setPieceAt(Piece.BLACK_BISHOP, new Coordinate(2, 7));
+		board.setPieceAt(Piece.BLACK_QUEEN, new Coordinate(3, 7));
+		board.setPieceAt(Piece.BLACK_KING, new Coordinate(4, 7));
+		board.setPieceAt(Piece.BLACK_BISHOP, new Coordinate(5, 7));
+		board.setPieceAt(Piece.BLACK_KNIGHT, new Coordinate(6, 7));
+		board.setPieceAt(Piece.BLACK_ROOK, new Coordinate(7, 7));
+
+		for (int x = 0; x < Board.SIZE; x++) {
+			board.setPieceAt(Piece.BLACK_PAWN, new Coordinate(x, 6));
+		}
+
+		board.setPieceAt(Piece.WHITE_ROOK, new Coordinate(0, 0));
+		board.setPieceAt(Piece.WHITE_KNIGHT, new Coordinate(1, 0));
+		board.setPieceAt(Piece.WHITE_BISHOP, new Coordinate(2, 0));
+		board.setPieceAt(Piece.WHITE_QUEEN, new Coordinate(3, 0));
+		board.setPieceAt(Piece.WHITE_KING, new Coordinate(4, 0));
+		board.setPieceAt(Piece.WHITE_BISHOP, new Coordinate(5, 0));
+		board.setPieceAt(Piece.WHITE_KNIGHT, new Coordinate(6, 0));
+		board.setPieceAt(Piece.WHITE_ROOK, new Coordinate(7, 0));
+		
+		for (int x = 0; x < Board.SIZE; x++) {
+			board.setPieceAt(Piece.WHITE_PAWN, new Coordinate(x, 1));
+		}		
+		
+		// when
+		Color kingColor=Color.WHITE;	
+		MoveValidator moveValidator = new MoveValidator();
+		Coordinate kingCoordinates;
+		kingCoordinates=moveValidator.findKingInSpecifiedColor(board, kingColor);
+		
+		// then
+		assertEquals(4, kingCoordinates.getX());
+		assertEquals(0, kingCoordinates.getY());
+		assertEquals(PieceType.KING, board.getPieceAt(kingCoordinates).getType());
+		assertEquals(Color.WHITE, board.getPieceAt(kingCoordinates).getColor());
 	}
 
 }

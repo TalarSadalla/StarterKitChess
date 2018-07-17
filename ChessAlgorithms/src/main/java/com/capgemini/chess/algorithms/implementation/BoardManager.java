@@ -1,5 +1,6 @@
 package com.capgemini.chess.algorithms.implementation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -73,8 +74,9 @@ public class BoardManager {
 	 * Calculates state of the chess board.
 	 *
 	 * @return state of the chess board
+	 * @throws InvalidMoveException 
 	 */
-	public BoardState updateBoardState() {
+	public BoardState updateBoardState() throws InvalidMoveException {
 
 		Color nextMoveColor = calculateNextMoveColor();
 
@@ -238,10 +240,12 @@ public class BoardManager {
 		return move;
 	}
 
-	private boolean isKingInCheck(Color kingColor) {
-
-		// TODO please add implementation here
-		return false;
+	private boolean isKingInCheck(Color kingColor) throws InvalidMoveException {
+		ArrayList<Move> movesToKing = new ArrayList<Move>();
+		MoveValidator moveValidator = new MoveValidator();
+		Coordinate kingCoordinates=moveValidator.findKingInSpecifiedColor(board, kingColor);
+		movesToKing=moveValidator.isKingInCheckValidation(board, kingColor, kingCoordinates); 
+		return movesToKing.size()!=0 ?true: false;
 	}
 
 	private boolean isAnyMoveValid(Color nextMoveColor) {
