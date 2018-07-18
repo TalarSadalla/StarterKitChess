@@ -28,10 +28,12 @@ public class MoveValidator {
 		allPieces = board.getPieces();
 		int kingCoordinateX = 0;
 		int kingCoordinateY = 0;
-
+		Coordinate pieceCoordinates = new Coordinate(kingCoordinateX, kingCoordinateY);
+		Coordinate kingCoordinates = new Coordinate(kingCoordinateX, kingCoordinateY);
 		for (int xAxis = 0; xAxis < board.SIZE; xAxis++) {
 			for (int yAxis = 0; yAxis < board.SIZE; yAxis++) {
-				if (allPieces[xAxis][yAxis] != null) {
+				pieceCoordinates = new Coordinate(xAxis, yAxis);
+				if (board.getPieceAt(pieceCoordinates) != null) {
 					if (allPieces[xAxis][yAxis].getType() == PieceType.KING
 							&& (allPieces[xAxis][yAxis].getColor() == kingColor)) {
 						kingCoordinateX = xAxis;
@@ -41,26 +43,65 @@ public class MoveValidator {
 				}
 			}
 		}
-		Coordinate kingCoordinates = new Coordinate(kingCoordinateX, kingCoordinateY);
+		kingCoordinates = new Coordinate(kingCoordinateX, kingCoordinateY);
 		return kingCoordinates;
 	}
 
 	public ArrayList<Move> isKingInCheckValidation(Board board, Color kingColor, Coordinate kingCoordinates)
 			throws InvalidMoveException {
 		ArrayList<Move> movesToKing = new ArrayList<Move>();
-		Piece[][] allPieces = new Piece[board.SIZE][board.SIZE];
-		allPieces = board.getPieces();
+		Piece oppositeColorPiece;
+		Coordinate opositeColorPieceCoordinate;
 		for (int xAxis = 0; xAxis < board.SIZE; xAxis++) {
 			for (int yAxis = 0; yAxis < board.SIZE; yAxis++) {
-				if (allPieces[xAxis][yAxis] != null) {
-					if (allPieces[xAxis][yAxis].getColor() != kingColor) {
-						movesToKing.add(validate(board, xAxis, yAxis, kingCoordinates.getX(), kingCoordinates.getY()));
+				opositeColorPieceCoordinate = new Coordinate(xAxis, yAxis);
+				oppositeColorPiece = board.getPieceAt(opositeColorPieceCoordinate);
+				if (board.getPieceAt(opositeColorPieceCoordinate) != null) {
+					if (!(oppositeColorPiece.getColor().equals(kingColor))) {
+						if (validate(board, xAxis, yAxis, kingCoordinates.getX(), kingCoordinates.getY()) != null) {
+							movesToKing
+									.add(validate(board, xAxis, yAxis, kingCoordinates.getX(), kingCoordinates.getY()));
+						}
 					}
 				}
 			}
 		}
 		return movesToKing;
+	}
 
+	public ArrayList<Coordinate> findPiecesInSpecifiedColor(Board board, Color nextMoveColor) {
+		Piece[][] allPieces = new Piece[board.SIZE][board.SIZE];
+		ArrayList<Coordinate> piecesInSpecifiedColorList = new ArrayList<Coordinate>();
+		allPieces = board.getPieces();
+		int pieceCoordinateX = 0;
+		int pieceCoordinateY = 0;
+		Coordinate pieceCoordinates = new Coordinate(pieceCoordinateX, pieceCoordinateY);
+		for (int xAxis = 0; xAxis < board.SIZE; xAxis++) {
+			for (int yAxis = 0; yAxis < board.SIZE; yAxis++) {
+				pieceCoordinates = new Coordinate(xAxis, yAxis);
+				if (board.getPieceAt(pieceCoordinates) != null) {
+					if ((allPieces[xAxis][yAxis].getColor() == nextMoveColor)) {
+						piecesInSpecifiedColorList.add(new Coordinate(xAxis, yAxis));
+					}
+				}
+			}
+		}
+		return piecesInSpecifiedColorList;
+	}
+
+	public ArrayList<Move> isAnyMoveValidation(Board board, Coordinate kingCoordinates,
+			ArrayList<Coordinate> piecesInSpecifiedColorList) throws InvalidMoveException {
+		ArrayList<Move> isAnyMoveValid = new ArrayList<Move>();
+		int specificPieceCoordinateX, specificPieceCoordinateY;
+		for (int index = 0; index < piecesInSpecifiedColorList.size(); index++) {
+			Piece specificPiece = board.getPieceAt(piecesInSpecifiedColorList.get(index));
+			specificPieceCoordinateX = piecesInSpecifiedColorList.get(index).getX();
+			specificPieceCoordinateY = piecesInSpecifiedColorList.get(index).getY();
+			specificPiece.getType();
+			isAnyMoveValid.add(validate(board, specificPieceCoordinateX, specificPieceCoordinateY,
+					kingCoordinates.getX(), kingCoordinates.getY()));
+		}
+		return isAnyMoveValid;
 	}
 
 	public Move validate(Board board, int xFrom, int yFrom, int xTo, int yTo) throws InvalidMoveException {
@@ -79,9 +120,7 @@ public class MoveValidator {
 		}
 		if (xTo == xFrom && yTo == yFrom)
 			throw new InvalidMoveException();
-
 		if (playerColor == board.getPieceAt(new Coordinate(xFrom, yFrom)).getColor()) {
-
 			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KING)) {
 				ArrayList<Coordinate> filteredMoves = possibleKingMoves(board, xFrom, yFrom, xTo, yTo);
 				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
@@ -109,7 +148,6 @@ public class MoveValidator {
 		} else {
 			throw new InvalidColorException();
 		}
-
 		return move;
 	}
 
@@ -132,9 +170,8 @@ public class MoveValidator {
 					move.setFrom(new Coordinate(xFrom, yFrom));
 					move.setTo(new Coordinate(xTo, yTo));
 					move.setMovedPiece(board.getPieceAt(new Coordinate(xFrom, yFrom)));
-
 				} else if (movingPiece == null && movingPiece != pieceFrom) {
-				} else {
+				} else if (movingPiece.getColor() != pieceFrom.getColor()) {
 					if (!(pieceFrom.getType().equals(PieceType.KNIGHT))
 							&& !(pieceFrom.getType().equals(PieceType.PAWN))) {
 						move.setType(MoveType.CAPTURE);
@@ -164,7 +201,6 @@ public class MoveValidator {
 
 	private ArrayList<Coordinate> possibleKingMoves(Board board, int xFrom, int yFrom, int xTo, int yTo)
 			throws InvalidMoveException {
-
 		ArrayList<Coordinate> filteredMoves = new ArrayList<Coordinate>();
 		int distance = 0;
 		if (yFrom < yTo && xFrom < xTo) {
@@ -217,9 +253,8 @@ public class MoveValidator {
 			}
 		} else if (yFrom == yTo || xFrom == xTo) {
 			distance = (int) (Math.pow(xTo - xFrom, 2) + Math.pow(yTo - yFrom, 2));
-			validateKingMoves(filteredMoves, distance, xFrom, yFrom);
+			validateKingMoves(filteredMoves, distance, xTo, yTo);
 		}
-
 		if (filteredMoves.size() == 0) {
 			throw new InvalidKingMoveException();
 		}
@@ -244,7 +279,6 @@ public class MoveValidator {
 			throw new InvalidKnightMoveException();
 		}
 		return filteredMoves;
-
 	}
 
 	private void validateKnightMoves(int xFrom, int yFrom, int xTo, int yTo, ArrayList<Coordinate> filteredMoves) {
@@ -303,7 +337,6 @@ public class MoveValidator {
 			throw new InvalidRookMoveException();
 		}
 		return filteredMoves;
-
 	}
 
 	private void validateRookMoves(int xTo, int yTo, ArrayList<Coordinate> filteredMoves, int xAxis, int yAxis) {
@@ -348,7 +381,6 @@ public class MoveValidator {
 			throw new InvalidBishopMoveException();
 		}
 		return filteredMoves;
-
 	}
 
 	private void validateBishopMoves(int xTo, int yTo, ArrayList<Coordinate> filteredMoves, int xAxis, int yAxis) {
@@ -360,42 +392,60 @@ public class MoveValidator {
 	private ArrayList<Coordinate> possiblePawnMoves(Board board, int xFrom, int yFrom, int xTo, int yTo)
 			throws InvalidMoveException {
 		ArrayList<Coordinate> filteredMoves = new ArrayList<Coordinate>();
-		if (yFrom < yTo) {
-			validatePawnMoves(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+		if (Math.abs(yTo - yFrom) > 2) {
+			return filteredMoves;
 		} else {
-			validatePawnMoves(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			if (yFrom < yTo) {
+				validatePawnMoves(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			} else {
+				validatePawnMoves(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+			}
+			if (filteredMoves.size() == 0) {
+				throw new InvalidPawnMoveException();
+			}
+			return filteredMoves;
 		}
-		if (filteredMoves.size() == 0) {
-			throw new InvalidPawnMoveException();
-		}
-		return filteredMoves;
 	}
 
 	private void validatePawnMoves(Board board, int xFrom, int yFrom, int xTo, int yTo,
 			ArrayList<Coordinate> filteredMoves) {
 		for (int x = 0; x < board.SIZE; x++) {
 			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getColor() == Color.WHITE) {
-
 				if (yFrom == 1) {
 
 					if (yTo == (yFrom + 2) && xFrom == x) {
-						filteredMoves.add(new Coordinate(xFrom, yFrom));
+						filteredMoves.add(new Coordinate(xTo, yTo));
+					} else if (((xTo == xFrom - 1 && yTo == yFrom + 1) || (xTo == xFrom + 1 && yTo == yFrom + 1))
+							&& board.getPieceAt(new Coordinate(xTo, yTo)) != null) {
+						filteredMoves.add(new Coordinate(xTo, yTo));
+					} else if (yTo == (yFrom + 1) && xFrom == xTo
+							&& board.getPieceAt(new Coordinate(xTo, yTo)) == null) {
+						filteredMoves.add(new Coordinate(xTo, yTo));
 					}
 				} else if (((xTo == xFrom - 1 && yTo == yFrom + 1) || (xTo == xFrom + 1 && yTo == yFrom + 1))
 						&& board.getPieceAt(new Coordinate(xTo, yTo)) != null) {
+					filteredMoves.add(new Coordinate(xTo, yTo));
+				} else if (yTo == (yFrom + 1) && xFrom == xTo && board.getPieceAt(new Coordinate(xTo, yTo)) == null) {
 					filteredMoves.add(new Coordinate(xTo, yTo));
 				}
 			} else {
 				if (yFrom == 6) {
 					if (yTo == (yFrom - 2) && xFrom == x) {
 						filteredMoves.add(new Coordinate(xTo, yTo));
+					} else if (((xTo == xFrom - 1 && yTo == yFrom - 1) || (xTo == xFrom + 1 && yTo == yFrom - 1))
+							&& board.getPieceAt(new Coordinate(xTo, yTo)) != null) {
+						filteredMoves.add(new Coordinate(xTo, yTo));
+					} else if (yTo == (yFrom - 1) && xFrom == xTo
+							&& board.getPieceAt(new Coordinate(xTo, yTo)) == null) {
+						filteredMoves.add(new Coordinate(xTo, yTo));
 					}
 				} else if (((xTo == xFrom - 1 && yTo == yFrom - 1) || (xTo == xFrom + 1 && yTo == yFrom - 1))
 						&& board.getPieceAt(new Coordinate(xTo, yTo)) != null) {
 					filteredMoves.add(new Coordinate(xTo, yTo));
+				} else if (yTo == (yFrom - 1) && xFrom == xTo && board.getPieceAt(new Coordinate(xTo, yTo)) == null) {
+					filteredMoves.add(new Coordinate(xTo, yTo));
 				}
 			}
-
 		}
 	}
 }

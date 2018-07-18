@@ -20,19 +20,15 @@ public class PieceTest {
 	public void testPerformMovePawnAttack() throws InvalidMoveException {
 		// given
 		Board board = new Board();		
-		board.setPieceAt(Piece.WHITE_PAWN, new Coordinate(4, 1));
-		//board.setPieceAt(Piece.BLACK_PAWN, new Coordinate(4, 1));
+		board.setPieceAt(Piece.WHITE_PAWN, new Coordinate(1, 1));
 		
 		// when
 		BoardManager boardManager = new BoardManager(board);
-		Move move = boardManager.performMove(new Coordinate(4, 1), new Coordinate(4, 3));
-		//Move moveWhitePawn = boardManager.performMove(new Coordinate(4, 1), new Coordinate(4, 3));
+		Move move = boardManager.performMove(new Coordinate(1, 1), new Coordinate(1, 3));
 
 		// then
 		assertEquals(MoveType.ATTACK, move.getType());
 		assertEquals(Piece.WHITE_PAWN, move.getMovedPiece());
-		//assertEquals(MoveType.ATTACK, moveWhitePawn.getType());
-		//assertEquals(Piece.BLACK_PAWN, moveWhitePawn.getMovedPiece());
 	}
 
 	@Test
@@ -49,7 +45,7 @@ public class PieceTest {
 
 		// then
 		assertEquals(MoveType.CAPTURE, move.getType());
-		assertEquals(Piece.WHITE_BISHOP, move.getMovedPiece());
+		assertEquals(Piece.WHITE_PAWN, move.getMovedPiece());
 	}
 
 	@Test
@@ -61,7 +57,6 @@ public class PieceTest {
 		// when
 		BoardManager boardManager = new BoardManager(board);
 		Move move = boardManager.performMove(new Coordinate(0, 6), new Coordinate(6, 0));
-		
 
 		// then
 		assertEquals(MoveType.ATTACK, move.getType());

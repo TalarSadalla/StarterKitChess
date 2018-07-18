@@ -64,17 +64,27 @@ public class BoardManager {
 	public Move performMove(Coordinate from, Coordinate to) throws InvalidMoveException {
 
 		Move move = validateMove(from, to);
-
 		addMove(move);
+		boolean isInCheck = true;
+		if (calculateNextMoveColor() == Color.BLACK) {
+			isInCheck = isKingInCheck(Color.WHITE);
+		} else {
+			isInCheck = isKingInCheck(Color.BLACK);
+		}
 
-		return move;
+		if (!isInCheck)
+			return move;
+		else {
+			board.getMoveHistory().remove(board.getMoveHistory().size() - 1);
+			throw new KingInCheckException();
+		}
 	}
 
 	/**
 	 * Calculates state of the chess board.
 	 *
 	 * @return state of the chess board
-	 * @throws InvalidMoveException 
+	 * @throws InvalidMoveException
 	 */
 	public BoardState updateBoardState() throws InvalidMoveException {
 
@@ -236,23 +246,33 @@ public class BoardManager {
 	private Move validateMove(Coordinate from, Coordinate to) throws InvalidMoveException, KingInCheckException {
 		Move move = new Move();
 		MoveValidator moveValidator = new MoveValidator();
-		move=moveValidator.validate(board, from.getX(), from.getY(), to.getX(), to.getY()); 		
+		move = moveValidator.validate(board, from.getX(), from.getY(), to.getX(), to.getY());
 		return move;
 	}
 
 	private boolean isKingInCheck(Color kingColor) throws InvalidMoveException {
 		ArrayList<Move> movesToKing = new ArrayList<Move>();
 		MoveValidator moveValidator = new MoveValidator();
-		Coordinate kingCoordinates=moveValidator.findKingInSpecifiedColor(board, kingColor);
-		movesToKing=moveValidator.isKingInCheckValidation(board, kingColor, kingCoordinates); 
-		return movesToKing.size()!=0 ?true: false;
+		Coordinate kingCoordinates = moveValidator.findKingInSpecifiedColor(board, kingColor);
+		movesToKing = moveValidator.isKingInCheckValidation(board, kingColor, kingCoordinates);
+		return movesToKing.size() != 0 ? true : false;
 	}
 
-	private boolean isAnyMoveValid(Color nextMoveColor) {
+	private boolean isAnyMoveValid(Color nextMoveColor) throws InvalidMoveException {
+		ArrayList<Coordinate> piecesInSpecifiedColorList = new ArrayList<Coordinate>();
+		MoveValidator moveValidator = new MoveValidator();
+		ArrayList<Move> isAnyMoveValidList = new ArrayList<Move>();
+		if (nextMoveColor == Color.BLACK) {
+			Coordinate kingCoordinates = moveValidator.findKingInSpecifiedColor(board, Color.WHITE);
+			piecesInSpecifiedColorList = moveValidator.findPiecesInSpecifiedColor(board, nextMoveColor);
+			isAnyMoveValidList = moveValidator.isAnyMoveValidation(board, kingCoordinates, piecesInSpecifiedColorList);
+		} else {
+			Coordinate kingCoordinates = moveValidator.findKingInSpecifiedColor(board, Color.BLACK);
+			piecesInSpecifiedColorList = moveValidator.findPiecesInSpecifiedColor(board, nextMoveColor);
+			isAnyMoveValidList = moveValidator.isAnyMoveValidation(board, kingCoordinates, piecesInSpecifiedColorList);
+		}
 
-		// TODO please add implementation here
-
-		return false;
+		return isAnyMoveValidList.size() != 0 ? true : false;
 	}
 
 	private Color calculateNextMoveColor() {
