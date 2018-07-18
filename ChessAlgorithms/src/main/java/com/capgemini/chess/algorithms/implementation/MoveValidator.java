@@ -10,7 +10,6 @@ import com.capgemini.chess.algorithms.data.enums.Piece;
 import com.capgemini.chess.algorithms.data.enums.PieceType;
 import com.capgemini.chess.algorithms.data.generated.Board;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidBishopMoveException;
-import com.capgemini.chess.algorithms.implementation.exceptions.InvalidColorException;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidKingMoveException;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidKnightMoveException;
 import com.capgemini.chess.algorithms.implementation.exceptions.InvalidMoveException;
@@ -22,6 +21,8 @@ import com.capgemini.chess.algorithms.implementation.exceptions.NullFieldExcepio
 import com.capgemini.chess.algorithms.implementation.exceptions.OutOfBoardMoveException;
 
 public class MoveValidator {
+
+	private int isAnyMovePossible = 0;
 
 	public Coordinate findKingInSpecifiedColor(Board board, Color kingColor) {
 		Piece[][] allPieces = new Piece[board.SIZE][board.SIZE];
@@ -47,9 +48,8 @@ public class MoveValidator {
 		return kingCoordinates;
 	}
 
-	public ArrayList<Move> isKingInCheckValidation(Board board, Color kingColor, Coordinate kingCoordinates)
+	public boolean isKingInCheckValidation(Board board, Color kingColor, Coordinate kingCoordinates)
 			throws InvalidMoveException {
-		ArrayList<Move> movesToKing = new ArrayList<Move>();
 		Piece oppositeColorPiece;
 		Coordinate opositeColorPieceCoordinate;
 		for (int xAxis = 0; xAxis < board.SIZE; xAxis++) {
@@ -58,15 +58,17 @@ public class MoveValidator {
 				oppositeColorPiece = board.getPieceAt(opositeColorPieceCoordinate);
 				if (board.getPieceAt(opositeColorPieceCoordinate) != null) {
 					if (!(oppositeColorPiece.getColor().equals(kingColor))) {
-						if (validate(board, xAxis, yAxis, kingCoordinates.getX(), kingCoordinates.getY()) != null) {
-							movesToKing
-									.add(validate(board, xAxis, yAxis, kingCoordinates.getX(), kingCoordinates.getY()));
+						try {
+							validate(board, xAxis, yAxis, kingCoordinates.getX(), kingCoordinates.getY());
+						} catch (InvalidMoveException e) {
+							continue;
 						}
+						return true;
 					}
 				}
 			}
 		}
-		return movesToKing;
+		return false;
 	}
 
 	public ArrayList<Coordinate> findPiecesInSpecifiedColor(Board board, Color nextMoveColor) {
@@ -89,29 +91,29 @@ public class MoveValidator {
 		return piecesInSpecifiedColorList;
 	}
 
-	public ArrayList<Move> isAnyMoveValidation(Board board, Coordinate kingCoordinates,
+	public boolean isAnyMoveValid(Board board, Coordinate kingCoordinates,
 			ArrayList<Coordinate> piecesInSpecifiedColorList) throws InvalidMoveException {
-		ArrayList<Move> isAnyMoveValid = new ArrayList<Move>();
 		int specificPieceCoordinateX, specificPieceCoordinateY;
+		boolean exceptionThrown = false;
 		for (int index = 0; index < piecesInSpecifiedColorList.size(); index++) {
 			Piece specificPiece = board.getPieceAt(piecesInSpecifiedColorList.get(index));
 			specificPieceCoordinateX = piecesInSpecifiedColorList.get(index).getX();
 			specificPieceCoordinateY = piecesInSpecifiedColorList.get(index).getY();
 			specificPiece.getType();
-			isAnyMoveValid.add(validate(board, specificPieceCoordinateX, specificPieceCoordinateY,
-					kingCoordinates.getX(), kingCoordinates.getY()));
+			try {
+				validate(board, specificPieceCoordinateX, specificPieceCoordinateY, kingCoordinates.getX(),
+						kingCoordinates.getY());
+			} catch (InvalidMoveException e) {
+				continue;
+			}
+			return true;
 		}
-		return isAnyMoveValid;
+		return false;
 	}
 
 	public Move validate(Board board, int xFrom, int yFrom, int xTo, int yTo) throws InvalidMoveException {
 		Move move = new Move();
-		Color playerColor;
-		if (board.getMoveHistory().size() % 2 == 0) {
-			playerColor = Color.WHITE;
-		} else {
-			playerColor = Color.BLACK;
-		}
+
 		if (xTo < 0 || xTo > 7 || xFrom < 0 || xFrom > 7 || yTo < 0 || yTo > 7 || yFrom < 0 || yFrom > 7) {
 			throw new OutOfBoardMoveException();
 		}
@@ -120,34 +122,35 @@ public class MoveValidator {
 		}
 		if (xTo == xFrom && yTo == yFrom)
 			throw new InvalidMoveException();
-		if (playerColor == board.getPieceAt(new Coordinate(xFrom, yFrom)).getColor()) {
-			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KING)) {
-				ArrayList<Coordinate> filteredMoves = possibleKingMoves(board, xFrom, yFrom, xTo, yTo);
-				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-			}
-			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KNIGHT)) {
-				ArrayList<Coordinate> filteredMoves = possibleKnightMoves(board, xFrom, yFrom, xTo, yTo);
-				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-			}
-			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.QUEEN)) {
-				ArrayList<Coordinate> filteredMoves = possibleQueenMoves(board, xFrom, yFrom, xTo, yTo);
-				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-			}
-			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.BISHOP)) {
-				ArrayList<Coordinate> filteredMoves = possibleBishopMoves(board, xFrom, yFrom, xTo, yTo);
-				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-			}
-			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.ROOK)) {
-				ArrayList<Coordinate> filteredMoves = possibleRookMoves(board, xFrom, yFrom, xTo, yTo);
-				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-			}
-			if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.PAWN)) {
-				ArrayList<Coordinate> filteredMoves = possiblePawnMoves(board, xFrom, yFrom, xTo, yTo);
-				move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
-			}
-		} else {
-			throw new InvalidColorException();
+		// if (playerColor == board.getPieceAt(new Coordinate(xFrom,
+		// yFrom)).getColor()) {
+		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KING)) {
+			ArrayList<Coordinate> filteredMoves = possibleKingMoves(board, xFrom, yFrom, xTo, yTo);
+			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
 		}
+		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.KNIGHT)) {
+			ArrayList<Coordinate> filteredMoves = possibleKnightMoves(board, xFrom, yFrom, xTo, yTo);
+			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+		}
+		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.QUEEN)) {
+			ArrayList<Coordinate> filteredMoves = possibleQueenMoves(board, xFrom, yFrom, xTo, yTo);
+			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+		}
+		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.BISHOP)) {
+			ArrayList<Coordinate> filteredMoves = possibleBishopMoves(board, xFrom, yFrom, xTo, yTo);
+			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+		}
+		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.ROOK)) {
+			ArrayList<Coordinate> filteredMoves = possibleRookMoves(board, xFrom, yFrom, xTo, yTo);
+			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+		}
+		if (board.getPieceAt(new Coordinate(xFrom, yFrom)).getType().equals(PieceType.PAWN)) {
+			ArrayList<Coordinate> filteredMoves = possiblePawnMoves(board, xFrom, yFrom, xTo, yTo);
+			move = isBoardFieldNotNull(board, xFrom, yFrom, xTo, yTo, filteredMoves);
+		}
+		// } else {
+		// throw new InvalidColorException();
+		// }
 		return move;
 	}
 
