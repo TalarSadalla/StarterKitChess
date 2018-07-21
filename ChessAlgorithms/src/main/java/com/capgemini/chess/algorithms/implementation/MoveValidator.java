@@ -48,15 +48,17 @@ public class MoveValidator {
 
 	public boolean isAnyMoveValid(Board board, Coordinate kingCoordinates,
 			ArrayList<Coordinate> piecesInSpecifiedColorList) {
-		{
+		List<Move> allPossibleMoves = getAllPossibleMoves(board, kingCoordinates, piecesInSpecifiedColorList);
+		for (Move possibleMove : allPossibleMoves) {
 			if (isKingInCheckValidation(board, board.getPieceAt(kingCoordinates).getColor(), kingCoordinates))
 				return false;
 			return true;
 		}
+		return false;
 	}
 
 	public List<Move> getAllPossibleMoves(Board board, Coordinate kingCoordinates,
-			ArrayList<Coordinate> piecesInSpecifiedColorList) {
+			List<Coordinate> piecesInSpecifiedColorList) {
 		List<Move> allPossibleMoves = new ArrayList<>();
 		Board copyOfBoard = new Board(board);
 
@@ -104,8 +106,8 @@ public class MoveValidator {
 		return allPossibleMoves;
 	}
 
-	private boolean isAnyMovePossibleForSpecificPiece(ArrayList<Coordinate> piecesInSpecifiedColorList,
-			Board copyOfBoard, int i, List<Coordinate> filteredMoves, List<Move> allPossibleMoves) {
+	private boolean isAnyMovePossibleForSpecificPiece(List<Coordinate> piecesInSpecifiedColorList, Board copyOfBoard,
+			int i, List<Coordinate> filteredMoves, List<Move> allPossibleMoves) {
 		for (int j = 0; j < filteredMoves.size(); j++) {
 			try {
 				allPossibleMoves.add(validate(copyOfBoard, piecesInSpecifiedColorList.get(i), filteredMoves.get(j)));
